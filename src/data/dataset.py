@@ -2,10 +2,11 @@ import os
 import torch
 from torch.utils.data import Dataset
 from torchvision.transforms.functional import to_tensor
+import torch.nn.functional as F
 from PIL import Image, ImageFile
 from nuscenes import NuScenes
 
-from src.utils import decode_labels, reduce_labels
+from src.utils import decode_labels, reduce_labels, downsample_labels
 
 
 class NuScencesMaps(Dataset):
@@ -18,8 +19,9 @@ class NuScencesMaps(Dataset):
 
         self.image_size = (1280, 720)
         self.grid_size = (50, 50)
-        self.grid_res = 1.0
+        self.grid_res = 0.5
         self.map_size = (100, 100)
+        self.grid = self.make_grid()
 
         self.classes_nuscnenes = [
             "drivable_area",
@@ -68,7 +70,8 @@ class NuScencesMaps(Dataset):
         num_class = len(self.classes_nuscnenes)
         labels = decode_labels(encoded_labels, num_class + 1)
         labels, mask = labels[:-1], ~labels[-1]
-        return reduce_labels(labels), mask
+        labels = reduce_labels(labels)
+        return labels, mask
 
     def load_calib(self, token):
         """
@@ -118,3 +121,14 @@ class NuScencesMaps(Dataset):
         with open(path, "r") as f:
             lines = f.read().split("\n")
             return [val for val in lines if val != ""]
+
+    def make_grid(self):
+        """
+        https://github.com/avishkarsaha/translating-images-into-maps
+        """
+        depth, width = self.grid_size
+        xcoords = torch.arange(0.0, width, self.grid_res)
+        zcoords = torch.arange(0.0, depth, self.grid_res)
+
+        zz, xx = torch.meshgrid(zcoords, xcoords)
+        return torch.stack([xx, zz], dim=-1)
