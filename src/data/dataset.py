@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from PIL import Image, ImageFile
 from nuscenes import NuScenes
 
-from src.utils import decode_labels, reduce_labels, downsample
+from src.utils import decode_labels, reduce_labels, upsample_labels
 
 
 class NuScencesMaps(Dataset):
@@ -17,10 +17,10 @@ class NuScencesMaps(Dataset):
         self.nuscenes = NuScenes("v1.0-trainval", self.path)
         self.tokens = self.get_tokens(split)
 
-        self.image_size = (1280, 720)
+        self.image_size = (1600, 900)
         self.grid_size = (50, 50)
         self.grid_res = 0.5
-        self.map_size = (100, 100)
+        self.map_size = (200, 200)
         self.grid = self.make_grid()
 
         self.classes_nuscnenes = [
@@ -52,6 +52,7 @@ class NuScencesMaps(Dataset):
         image = Image.open(self.nuscenes.get_sample_data_path(token))
         calib = self.load_calib(token)
         label, mask = self.load_label(token)
+        label = upsample_labels(label, self.map_size)
         image, calib = self.image_calib_pad_and_crop(image, calib)
         return image, calib, label, mask
 
