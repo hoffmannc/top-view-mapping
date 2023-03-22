@@ -17,7 +17,7 @@ def reduce_labels(labels):
     return reduced
 
 
-def downsample_labels(labels, size):
+def downsample(labels, size):
     labels = labels.unsqueeze(0)
     labels = F.interpolate(labels, size)
     return labels.squeeze(0)

@@ -6,7 +6,7 @@ import torch.nn.functional as F
 from PIL import Image, ImageFile
 from nuscenes import NuScenes
 
-from src.utils import decode_labels, reduce_labels, downsample_labels
+from src.utils import decode_labels, reduce_labels, downsample
 
 
 class NuScencesMaps(Dataset):
@@ -49,17 +49,11 @@ class NuScencesMaps(Dataset):
 
     def __getitem__(self, idx):
         token = self.tokens[idx]
-        image = self.load_image(token)
+        image = Image.open(self.nuscenes.get_sample_data_path(token))
         calib = self.load_calib(token)
         label, mask = self.load_label(token)
         image, calib = self.image_calib_pad_and_crop(image, calib)
         return image, calib, label, mask
-
-    def load_image(self, token):
-        """
-        https://github.com/tom-roddick/mono-semantic-maps
-        """
-        return Image.open(self.nuscenes.get_sample_data_path(token))
 
     def load_label(self, token):
         """
@@ -71,7 +65,7 @@ class NuScencesMaps(Dataset):
         labels = decode_labels(encoded_labels, num_class + 1)
         labels, mask = labels[:-1], ~labels[-1]
         labels = reduce_labels(labels)
-        return labels, mask
+        return labels, mask.double()
 
     def load_calib(self, token):
         """
@@ -111,7 +105,9 @@ class NuScencesMaps(Dataset):
         calib[0, 2] = calib[0, 2] + pad_left
         calib[1, 2] = calib[1, 2] + pad_top
 
-        return to_tensor(image), calib
+        image = to_tensor(image)
+
+        return image, calib
 
     def get_tokens(self, split):
         """
