@@ -1,2 +1,7 @@
 .DS_Store
 __pycache__
+wandb
+.vscode
+checkpoints
+nuscenes
+data

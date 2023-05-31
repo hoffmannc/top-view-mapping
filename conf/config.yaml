@@ -1,0 +1,24 @@
+training:
+  num_epochs: 20
+  batch_size: 4
+  lr: 5.0e-5
+  train_split: train_split
+  val_split: val_split
+model:
+  name: "PyrOccTranDetr_S_0904_old_2DPosEncBEV"
+  num_classes: 4
+  frontend: "resnet50"
+  grid_res: 0.5
+  pretrained: True,
+  img_dims: [1600, 900]
+  z_range: [1.0, 6.0, 13.0, 26.0, 51.0]
+  h_cropped: [60.0, 60.0, 60.0, 60.0]
+  dla_norm: "GroupNorm"
+  additions_BEVT_linear: False
+  additions_BEVT_conv: False
+  dla_l1_n_channels: 32
+  n_enc_layers: 2
+  n_dec_layers: 2
+paths:
+  nuscenes: "data"
+  checkpoints: "checkpoints"
