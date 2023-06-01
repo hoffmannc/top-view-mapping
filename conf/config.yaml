@@ -1,9 +1,9 @@
 training:
-  num_epochs: 20
+  num_epochs: 5
   batch_size: 4
   lr: 5.0e-5
-  train_split: train_split
-  val_split: val_split
+  train_split: debug_train_split
+  val_split: debug_val_split
 model:
   name: "PyrOccTranDetr_S_0904_old_2DPosEncBEV"
   num_classes: 4
