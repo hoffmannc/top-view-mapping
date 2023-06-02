@@ -49,21 +49,7 @@ def main():
     )
 
     # Model
-    model = Model(
-        num_classes=config["model"]["num_classes"],
-        frontend=config["model"]["frontend"],
-        grid_res=config["model"]["grid_res"],
-        pretrained=config["model"]["pretrained"],
-        img_dims=config["model"]["img_dims"],
-        z_range=config["model"]["z_range"],
-        h_cropped=config["model"]["h_cropped"],
-        dla_norm=config["model"]["dla_norm"],
-        additions_BEVT_linear=config["model"]["additions_BEVT_linear"],
-        additions_BEVT_conv=config["model"]["additions_BEVT_conv"],
-        dla_l1_n_channels=config["model"]["dla_l1_n_channels"],
-        n_enc_layers=config["model"]["n_enc_layers"],
-        n_dec_layers=config["model"]["n_dec_layers"],
-    )
+    model = Model(**config["model"])
 
     # Loss
     criterion = dice_loss_mean
@@ -80,17 +66,17 @@ def main():
     wandb.init(
         project="top-view-mapping",
         entity="hoffmann",
-        name="Training (Cluster)",
+        name="Top View Mapping (LSF-10)",
         config=config,
         group="DDP",
     )
 
     # MAIN
     trainer = Trainer(model, trainloader, valloader, optimizer, criterion, config)
+    torch.cuda.empty_cache()
     trainer.train()
 
     destroy_process_group()
-
     wandb.finish()
 
 

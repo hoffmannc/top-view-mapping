@@ -1,11 +1,10 @@
 training:
   num_epochs: 5
-  batch_size: 4
+  batch_size: 8
   lr: 5.0e-5
-  train_split: debug_train_split
-  val_split: debug_val_split
+  train_split: train_split
+  val_split: val_split
 model:
-  name: "PyrOccTranDetr_S_0904_old_2DPosEncBEV"
   num_classes: 4
   frontend: "resnet50"
   grid_res: 0.5
@@ -22,3 +21,4 @@ model:
 paths:
   nuscenes: "data"
   checkpoints: "checkpoints"
+filename: "FirstTry_2023-06-02"

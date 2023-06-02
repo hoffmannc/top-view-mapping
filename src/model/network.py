@@ -1084,11 +1084,11 @@ class PyrOccTranDetr_S_0904_old_rep100x100_out100x100(nn.Module):
         self.sample32 = sample_polar2cart(z_range[2], z_range[1], grid_res)
         self.sample64 = sample_polar2cart(z_range[1], z_range[0], grid_res)
 
-        # Batch normalisation to BEV outputs
-        self.bev_bn = nn.Sequential(
-            nn.GroupNorm(16, 256),
-            nn.ReLU(),
-        )
+        # # Batch normalisation to BEV outputs
+        # self.bev_bn = nn.Sequential(
+        #     nn.GroupNorm(16, 256),
+        #     nn.ReLU(),
+        # )
 
         # Topdown DLA
         n_channels = np.array(2 ** np.arange(4) * dla_l1_n_channels, dtype=int)

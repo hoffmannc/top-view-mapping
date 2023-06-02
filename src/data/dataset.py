@@ -5,11 +5,11 @@ from torchvision.transforms.functional import to_tensor
 from PIL import Image, ImageFile
 from nuscenes import NuScenes
 
-from src.utils import decode_labels, reduce_labels
+from src.utils import decode_labels
 
 
 class NuScencesMaps(Dataset):
-    def __init__(self, path, split):
+    def __init__(self, path: str, split: str):
         self.path = path
         self.nuscenes = NuScenes("v1.0-trainval", self.path)
         self.tokens = self.get_tokens(split)

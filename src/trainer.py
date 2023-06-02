@@ -1,6 +1,8 @@
 import os
 from typing import Callable
 import wandb
+from tqdm import tqdm
+import datetime
 
 import torch
 import torch.nn.functional as F
@@ -20,7 +22,7 @@ class Trainer:
     ):
         self.checkpoints_path = config["paths"]["checkpoints"]
 
-        self.epochs_run = 0
+        self.epoch_start = 0
 
         self.model = model
 
@@ -36,6 +38,34 @@ class Trainer:
 
         self.num_epochs = config["training"]["num_epochs"]
         self.batch_size = config["training"]["batch_size"]
+
+        self.filename = config["filename"]
+
+    def _run_epoch(self, epoch: int):
+        train_epoch_loss = 0
+        for image, calib, target, grid, vis_mask in tqdm(
+            self.trainloader,
+            desc=f"[GPU {self.gpu_id}] | T | E{epoch+1}",
+            total=len(self.trainloader),
+            ncols=100,
+        ):
+            image, calib, target, grid, vis_mask = (
+                image.to(torch.float32).to(self.gpu_id),
+                calib.to(torch.float32).to(self.gpu_id),
+                target.to(torch.float32).to(self.gpu_id),
+                grid.to(torch.float32).to(self.gpu_id),
+                vis_mask.to(torch.float32).to(self.gpu_id),
+            )
+            # print(f"[GPU {self.gpu_id}] T{epoch+1} B{i+1}/{len(self.trainloader)}")
+            train_batch_loss = self._run_batch(image, calib, target, vis_mask, grid)
+            train_epoch_loss += train_batch_loss
+
+        wandb.log(
+            {
+                "train_epoch_loss": train_epoch_loss
+                / (len(self.trainloader) * self.batch_size)
+            }
+        )
 
     def _run_batch(
         self,
@@ -56,29 +86,13 @@ class Trainer:
         self.optimizer.step()
         return loss
 
-    def _run_epoch(self, epoch: int):
-        batch_size = len(next(iter(self.trainloader))[0])
-        print(
-            f"[GPU {self.gpu_id}] Epoch {epoch} Training | Batchsize: {batch_size} | Steps: {len(self.trainloader)}"
-        )
-        train_epoch_loss = 0
-        for i, (image, calib, target, grid, vis_mask) in enumerate(self.trainloader):
-            image, calib, target, grid, vis_mask = (
-                image.to(torch.float32).to(self.gpu_id),
-                calib.to(torch.float32).to(self.gpu_id),
-                target.to(torch.float32).to(self.gpu_id),
-                grid.to(torch.float32).to(self.gpu_id),
-                vis_mask.to(torch.float32).to(self.gpu_id),
-            )
-            train_batch_loss = self._run_batch(image, calib, target, vis_mask, grid)
-            train_epoch_loss += train_batch_loss
-
-        wandb.log(
-            {
-                "train_epoch_loss": train_epoch_loss
-                / (len(self.trainloader) / self.batch_size)
-            }
-        )
+    def _downsample(self, target, map_sizes):
+        targets_downsampled = []
+        targets_downsampled.append(target)
+        for size in map_sizes[1:]:
+            t = F.interpolate(target, size=size, mode="bilinear")
+            targets_downsampled.append(t)
+        return targets_downsampled
 
     def _compute_loss(self, outputs, labels):
         ms_loss = torch.stack(
@@ -87,13 +101,27 @@ class Trainer:
         total_loss = torch.sum(ms_loss)
         return total_loss
 
-    def _downsample(self, target, map_sizes):
-        targets_downsampled = []
-        targets_downsampled.append(target)
-        for size in map_sizes[1:]:
-            t = F.interpolate(target, size=size, mode="bilinear")
-            targets_downsampled.append(t)
-        return targets_downsampled
+    def _eval_epoch(self, epoch: int):
+        val_epoch_loss = 0
+        for image, calib, target, grid, vis_mask in tqdm(
+            self.valloader,
+            desc=f"[GPU {self.gpu_id}] | V | E{epoch+1}",
+            total=len(self.valloader),
+            ncols=100,
+        ):
+            image, calib, target, grid, vis_mask = (
+                image.to(torch.float32).to(self.gpu_id),
+                calib.to(torch.float32).to(self.gpu_id),
+                target.to(torch.float32).to(self.gpu_id),
+                grid.to(torch.float32).to(self.gpu_id),
+                vis_mask.to(torch.float32).to(self.gpu_id),
+            )
+            val_batch_loss = self._eval_batch(image, calib, target, vis_mask, grid)
+            val_epoch_loss += val_batch_loss
+
+        wandb.log(
+            {"val_epoch_loss": val_epoch_loss / (len(self.valloader) * self.batch_size)}
+        )
 
     def _eval_batch(
         self,
@@ -110,41 +138,21 @@ class Trainer:
             loss = self._compute_loss(outputs, targets_downsampled)
         return loss
 
-    def _eval_epoch(self, epoch: int):
-        batch_size = len(next(iter(self.trainloader))[0])
-        print(
-            f"[GPU {self.gpu_id}] Epoch {epoch} Validation | Batchsize: {batch_size} | Steps: {len(self.trainloader)}"
-        )
-        val_epoch_loss = 0
-        for i, (image, calib, target, grid, vis_mask) in enumerate(self.valloader):
-            image, calib, target, grid, vis_mask = (
-                image.to(torch.float32).to(self.gpu_id),
-                calib.to(torch.float32).to(self.gpu_id),
-                target.to(torch.float32).to(self.gpu_id),
-                grid.to(torch.float32).to(self.gpu_id),
-                vis_mask.to(torch.float32).to(self.gpu_id),
-            )
-            val_batch_loss = self._eval_batch(image, calib, target, vis_mask, grid)
-            val_epoch_loss += val_batch_loss
-
-        wandb.log(
-            {"val_epoch_loss": val_epoch_loss / (len(self.valloader) / self.batch_size)}
-        )
-
     def _save_checkpoint(self, epoch: int):
         if self.gpu_id == 0:
             checkpoint = {}
             checkpoint["MODEL_STATE"] = self.model.module.state_dict()
             checkpoint["EPOCHS_RUN"] = epoch
-            name = f"/epoch_{epoch}.pt"
+            name = f"/{self.filename}_E{epoch+1}.pt"
             torch.save(checkpoint, self.checkpoints_path + name)
-            print(f"Epoch {epoch} | Checkpoint saved")
+            print(f"[GPU {self.gpu_id}] | S | E{epoch+1}")
 
     def _load_checkpoint(self, name):
         checkpoint = torch.load(os.path.join(self.checkpoints_path, name))
         self.model.module.load_state_dict(checkpoint["MODEL_STATE"])
-        self.epochs_run = checkpoint["EPOCHS_RUN"]
-        print(f"Epoch {self.epochs_run} | Checkpoint loaded")
+        epochs_run = checkpoint["EPOCHS_RUN"]
+        self.epoch_start = epochs_run + 1
+        print(f"[GPU {self.gpu_id}] | L | E{epochs_run + 1}")
 
     def _load_latest_checkpoint(self):
         checkpoints = os.listdir(self.checkpoints_path)
@@ -153,7 +161,7 @@ class Trainer:
             self._load_checkpoint(checkpoints_sorted[-1])
 
     def train(self):
-        for epoch in range(self.epochs_run, self.num_epochs):
+        for epoch in range(self.epoch_start, self.num_epochs):
             self.model.train()
             self._run_epoch(epoch)
             self.model.eval()
