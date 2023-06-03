@@ -21,4 +21,4 @@ model:
 paths:
   nuscenes: "data"
   checkpoints: "checkpoints"
-filename: "FirstTry_2023-06-02"
+filename: "2023-06-03"

@@ -1,5 +1,5 @@
 import yaml
-import wandb
+import os
 
 import torch
 from torch import optim
@@ -20,6 +20,15 @@ def main():
     # Configuration
     with open("conf/config.yaml") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
+
+    # Log files
+    filename = config["filename"]
+    if not os.path.exists(f"log/{filename}"):
+        os.mkdir(f"log/{filename}")
+    open(f"log/{filename}/train_batch_loss_100.txt", "w")
+    open(f"log/{filename}/train_epoch_loss.txt", "w")
+    open(f"log/{filename}/val_batch_loss_100.txt", "w")
+    open(f"log/{filename}/val_epoch_loss.txt", "w")
 
     # Data
     train_data = NuScencesMaps(
@@ -62,22 +71,12 @@ def main():
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
 
-    # WandB
-    wandb.init(
-        project="top-view-mapping",
-        entity="hoffmann",
-        name="Top View Mapping (LSF-10)",
-        config=config,
-        group="DDP",
-    )
-
     # MAIN
     trainer = Trainer(model, trainloader, valloader, optimizer, criterion, config)
     torch.cuda.empty_cache()
     trainer.train()
 
     destroy_process_group()
-    wandb.finish()
 
 
 if __name__ == "__main__":

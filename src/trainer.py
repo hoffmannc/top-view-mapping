@@ -1,8 +1,6 @@
 import os
 from typing import Callable
-import wandb
 from tqdm import tqdm
-import datetime
 
 import torch
 import torch.nn.functional as F
@@ -43,11 +41,14 @@ class Trainer:
 
     def _run_epoch(self, epoch: int):
         train_epoch_loss = 0
-        for image, calib, target, grid, vis_mask in tqdm(
-            self.trainloader,
-            desc=f"[GPU {self.gpu_id}] | T | E{epoch+1}",
-            total=len(self.trainloader),
-            ncols=100,
+        train_batch_loss_100 = 0
+        for i, (image, calib, target, grid, vis_mask) in enumerate(
+            tqdm(
+                self.trainloader,
+                desc=f"[GPU {self.gpu_id}] | T | E{epoch+1}",
+                total=len(self.trainloader),
+                ncols=100,
+            )
         ):
             image, calib, target, grid, vis_mask = (
                 image.to(torch.float32).to(self.gpu_id),
@@ -56,16 +57,30 @@ class Trainer:
                 grid.to(torch.float32).to(self.gpu_id),
                 vis_mask.to(torch.float32).to(self.gpu_id),
             )
-            # print(f"[GPU {self.gpu_id}] T{epoch+1} B{i+1}/{len(self.trainloader)}")
             train_batch_loss = self._run_batch(image, calib, target, vis_mask, grid)
             train_epoch_loss += train_batch_loss
+            train_batch_loss_100 += train_batch_loss
 
-        wandb.log(
-            {
-                "train_epoch_loss": train_epoch_loss
-                / (len(self.trainloader) * self.batch_size)
-            }
+            if (i % 100 == 0) and (i != 0):
+                with open(f"log/{self.filename}/train_batch_loss_100.txt", "a") as f:
+                    f.write(
+                        str((train_batch_loss_100 / (self.batch_size * 100)).item())
+                        + "\n"
+                    )
+                train_batch_loss_100 = 0
+
+        print(
+            f"[GPU {self.gpu_id}] | T | E{epoch+1} | {train_epoch_loss/(len(self.trainloader) * self.batch_size)}"
         )
+        with open(f"log/{self.filename}/train_epoch_loss.txt", "a") as f:
+            f.write(
+                str(
+                    (
+                        train_epoch_loss / (len(self.trainloader) * self.batch_size)
+                    ).item()
+                )
+                + "\n"
+            )
 
     def _run_batch(
         self,
@@ -103,11 +118,14 @@ class Trainer:
 
     def _eval_epoch(self, epoch: int):
         val_epoch_loss = 0
-        for image, calib, target, grid, vis_mask in tqdm(
-            self.valloader,
-            desc=f"[GPU {self.gpu_id}] | V | E{epoch+1}",
-            total=len(self.valloader),
-            ncols=100,
+        val_batch_loss_100 = 0
+        for i, (image, calib, target, grid, vis_mask) in enumerate(
+            tqdm(
+                self.valloader,
+                desc=f"[GPU {self.gpu_id}] | V | E{epoch+1}",
+                total=len(self.valloader),
+                ncols=100,
+            )
         ):
             image, calib, target, grid, vis_mask = (
                 image.to(torch.float32).to(self.gpu_id),
@@ -118,10 +136,24 @@ class Trainer:
             )
             val_batch_loss = self._eval_batch(image, calib, target, vis_mask, grid)
             val_epoch_loss += val_batch_loss
+            val_batch_loss_100 += val_batch_loss
 
-        wandb.log(
-            {"val_epoch_loss": val_epoch_loss / (len(self.valloader) * self.batch_size)}
+            if (i % 100 == 0) and (i != 0):
+                with open(f"log/{self.filename}/val_batch_loss_100.txt", "a") as f:
+                    f.write(
+                        str((val_batch_loss_100 / (self.batch_size * 100)).item())
+                        + "\n"
+                    )
+                val_batch_loss_100 = 0
+
+        print(
+            f"[GPU {self.gpu_id}] | V | E{epoch+1} | {val_epoch_loss / (len(self.valloader) * self.batch_size)}"
         )
+        with open(f"log/{self.filename}/val_epoch_loss.txt", "a") as f:
+            f.write(
+                str((val_epoch_loss / (len(self.valloader) * self.batch_size)).item())
+                + "\n"
+            )
 
     def _eval_batch(
         self,

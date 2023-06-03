@@ -5,3 +5,4 @@ wandb
 checkpoints
 nuscenes
 data
+log
