@@ -14,9 +14,6 @@ from src.trainer import Trainer
 
 
 def main():
-    # Mulit-GPU
-    init_process_group(backend="nccl")
-
     # Configuration
     with open("conf/config.yaml") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
@@ -29,6 +26,9 @@ def main():
     open(f"log/{filename}/train_epoch_loss.txt", "w")
     open(f"log/{filename}/val_batch_loss_100.txt", "w")
     open(f"log/{filename}/val_epoch_loss.txt", "w")
+
+    # Mulit-GPU
+    init_process_group(backend="nccl")
 
     # Data
     train_data = NuScencesMaps(
