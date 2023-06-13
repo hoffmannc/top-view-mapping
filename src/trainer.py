@@ -48,6 +48,7 @@ class Trainer:
                 desc=f"[GPU {self.gpu_id}] | T | E{epoch+1}",
                 total=len(self.trainloader),
                 ncols=100,
+                miniters=100,
             )
         ):
             image, calib, target, grid, vis_mask = (
@@ -125,6 +126,7 @@ class Trainer:
                 desc=f"[GPU {self.gpu_id}] | V | E{epoch+1}",
                 total=len(self.valloader),
                 ncols=100,
+                miniters=100,
             )
         ):
             image, calib, target, grid, vis_mask = (
