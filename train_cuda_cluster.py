@@ -7,7 +7,7 @@ from torch.utils.data import DataLoader
 from torch.utils.data.distributed import DistributedSampler
 from torch.distributed import init_process_group, destroy_process_group
 
-from src.data.dataset import NuScencesMaps
+from src.data.dataset_nuscenes import NuScencesMaps
 from src.model.network import PyrOccTranDetr_S_0904_old_2DPosEncBEV as Model
 from src.utils import dice_loss_mean
 from src.trainer import Trainer

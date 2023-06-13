@@ -5,7 +5,7 @@ from torchvision.transforms.functional import to_tensor
 from PIL import Image, ImageFile
 from nuscenes import NuScenes
 
-from src.utils import decode_labels
+from src.utils import decode_labels, make_grid
 
 
 class NuScencesMaps(Dataset):
@@ -18,7 +18,7 @@ class NuScencesMaps(Dataset):
         self.grid_size = (50, 50)
         self.grid_res = 0.5
         self.map_size = (200, 200)
-        self.grid = self.make_grid()
+        self.grid = make_grid(self.grid_size, self.grid_res)
 
         self.classes_nuscnenes = [
             "drivable_area",
@@ -79,14 +79,3 @@ class NuScencesMaps(Dataset):
         with open(path, "r") as f:
             lines = f.read().split("\n")
             return [val for val in lines if val != ""]
-
-    def make_grid(self):
-        """
-        https://github.com/avishkarsaha/translating-images-into-maps
-        """
-        depth, width = self.grid_size
-        xcoords = torch.arange(0.0, width, self.grid_res)
-        zcoords = torch.arange(0.0, depth, self.grid_res)
-
-        zz, xx = torch.meshgrid(zcoords, xcoords)
-        return torch.stack([xx, zz], dim=-1)
