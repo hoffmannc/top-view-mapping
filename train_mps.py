@@ -6,7 +6,7 @@ import torch.nn as nn
 from torch import optim, mps
 from torch.utils.data import DataLoader
 
-from src.data.dataset import NuScencesMaps
+from src.data.dataset_nuscenes import NuScencesMaps
 from src.model.network import PyrOccTranDetr_S_0904_old_2DPosEncBEV as Model
 from src.utils import dice_loss_mean
 

@@ -1,10 +1,8 @@
-import os
 import torch
 import torch.nn.functional as F
 import matplotlib.pyplot as plt
 from PIL import Image
 from torchvision.transforms.functional import to_tensor
-from torch.distributed import init_process_group, destroy_process_group
 
 
 def decode_labels(labels, num_classes):
@@ -73,28 +71,27 @@ def dice_loss_mean(pred, label):
     return loss_mean
 
 
-def ddp_setup(rank, world_size):
-    os.environ["MASTER_ADDR"] = "localhost"
-    os.environ["MASTER_PORT"] = "12355"
-    init_process_group(backend="nccl", rank=rank, world_size=world_size)
-    torch.cuda.set_device(rank)
-    print("--- Process group set up ---")
-
-
-def ddp_destroy():
-    destroy_process_group()
-    print("--- Process group destroyed ---")
-
-
-def label2image(label: torch.Tensor) -> torch.Tensor:
+def label2image(label: torch.Tensor):
     image = torch.zeros((label.shape[1], label.shape[2], 3))
-    colors = ["blue", "red", "green", "yellow"]
+    colors = ["black", "red", "green", "yellow"]
     for i in range(4):
-        mask = label[i] == 1
-        mask_3d = mask.unsqueeze(2).expand(image.shape)
+        mask = label == i
+        mask_3d = mask.permute([1, 2, 0]).expand(image.shape)
         color_image = to_tensor(
             Image.new("RGB", (image.shape[0], image.shape[1]), colors[i])
         )
         color_image = torch.permute(color_image, (1, 2, 0))
         image = torch.where(mask_3d, color_image, image)
     return image
+
+
+def make_grid(grid_size, grid_res):
+    """
+    https://github.com/avishkarsaha/translating-images-into-maps
+    """
+    depth, width = grid_size
+    xcoords = torch.arange(0.0, width, grid_res)
+    zcoords = torch.arange(0.0, depth, grid_res)
+
+    zz, xx = torch.meshgrid(zcoords, xcoords)
+    return torch.stack([xx, zz], dim=-1)
