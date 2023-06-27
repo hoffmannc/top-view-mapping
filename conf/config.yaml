@@ -1,5 +1,5 @@
 training:
-  num_epochs: 10
+  num_epochs: 40
   batch_size: 8
   lr: 5.0e-5
   train_split: train_split
