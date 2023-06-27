@@ -57,7 +57,7 @@ class NuScencesMaps(Dataset):
         """
         path = os.path.join(self.path, "targets", token + ".png")
         labels = to_tensor(Image.open(path)).long()
-        labels = decode_labels(labels, 5)
+        labels = decode_labels(labels, 4 + 1)
         labels, mask = labels[:-1], ~labels[-1]
         return labels.double(), mask.double()
 

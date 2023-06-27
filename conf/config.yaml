@@ -22,4 +22,4 @@ paths:
   nuscenes: "data/nuscenes"
   unity: "data/unity"
   checkpoints: "checkpoints"
-filename: "Run"
+filename: "strawberry"

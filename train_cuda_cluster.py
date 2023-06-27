@@ -22,10 +22,8 @@ def main():
     filename = config["filename"]
     if not os.path.exists(f"log/{filename}"):
         os.mkdir(f"log/{filename}")
-    open(f"log/{filename}/train_batch_loss_100.txt", "w")
-    open(f"log/{filename}/train_epoch_loss.txt", "w")
-    open(f"log/{filename}/val_batch_loss_100.txt", "w")
-    open(f"log/{filename}/val_epoch_loss.txt", "w")
+        open(f"log/{filename}/train_epoch_loss.txt", "w")
+        open(f"log/{filename}/val_epoch_loss.txt", "w")
 
     # Mulit-GPU
     init_process_group(backend="nccl")
