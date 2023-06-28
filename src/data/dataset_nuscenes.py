@@ -11,7 +11,7 @@ from src.utils import decode_labels, make_grid
 class NuScencesMaps(Dataset):
     def __init__(self, path: str, split: str):
         self.path = path
-        self.nuscenes = NuScenes("v1.0-trainval", self.path)
+        self.nuscenes = NuScenes("v1.0-trainval", self.path, verbose=False)
         self.tokens = self.get_tokens(split)
 
         self.image_size = (1600, 900)
