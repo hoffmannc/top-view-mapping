@@ -15,7 +15,7 @@ class Trainer:
         trainloader: DataLoader,
         valloader: DataLoader,
         optimizer: torch.optim.Optimizer,
-        scheduler: torch.optim.lr_scheduler,
+        scheduler: torch.optim.lr_scheduler.ExponentialLR,
         criterion: Callable,
         config: dict,
     ):
@@ -57,9 +57,10 @@ class Trainer:
         print(
             f"[GPU {self.gpu_id}] | T | E{epoch+1} | {train_epoch_loss/(len(self.trainloader) * self.batch_size)}"
         )
-        with open(f"log/{self.filename}/train_epoch_loss.txt", "a") as f:
+        with open(f"log/{self.filename}/train_loss.txt", "a") as f:
             f.write(
-                str(
+                f"E{epoch} GPU{self.gpu_id} "
+                + str(
                     (
                         train_epoch_loss / (len(self.trainloader) * self.batch_size)
                     ).item()
@@ -117,9 +118,10 @@ class Trainer:
         print(
             f"[GPU {self.gpu_id}] | V | E{epoch+1} | {val_epoch_loss / (len(self.valloader) * self.batch_size)}"
         )
-        with open(f"log/{self.filename}/val_epoch_loss.txt", "a") as f:
+        with open(f"log/{self.filename}/val_loss.txt", "a") as f:
             f.write(
-                str((val_epoch_loss / (len(self.valloader) * self.batch_size)).item())
+                f"E{epoch} GPU{self.gpu_id} "
+                + str((val_epoch_loss / (len(self.valloader) * self.batch_size)).item())
                 + "\n"
             )
 
@@ -143,6 +145,7 @@ class Trainer:
             checkpoint = {}
             checkpoint["MODEL_STATE"] = self.model.module.state_dict()
             checkpoint["EPOCHS_RUN"] = epoch
+            checkpoint["OPTIMIZER"] = self.optimizer.state_dict()
             checkpoint["SCHEDULER"] = self.scheduler.state_dict()
             name = f"{self.filename}_E{epoch+1}.pt"
             torch.save(
@@ -156,6 +159,7 @@ class Trainer:
         )
         self.model.module.load_state_dict(checkpoint["MODEL_STATE"])
         epochs_run = checkpoint["EPOCHS_RUN"]
+        self.optimizer.load_state_dict(checkpoint["OPTIMIZER"])
         self.scheduler.load_state_dict(checkpoint["SCHEDULER"])
         self.epoch_start = epochs_run + 1
         print(f"[GPU {self.gpu_id}] | L | E{epochs_run + 1}")

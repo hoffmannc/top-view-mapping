@@ -15,19 +15,27 @@ from src.trainer import Trainer
 
 
 def main(config_name):
+    # DDP
+    init_process_group(backend="nccl")
+    torch.cuda.empty_cache()
+
     # Configuration
     with open(f"conf/{config_name}.yaml") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
 
-    # Log files
-    filename = config["filename"]
-    if not os.path.exists(f"log/{filename}"):
-        os.mkdir(f"log/{filename}")
-        open(f"log/{filename}/train_epoch_loss.txt", "w")
-        open(f"log/{filename}/val_epoch_loss.txt", "w")
+    # Files
+    gpu_id = int(os.environ["LOCAL_RANK"])
+    if gpu_id == 0:
+        # Logs
+        filename = config["filename"]
+        if not os.path.exists(f"log/{filename}"):
+            os.mkdir(f"log/{filename}")
+            open(f"log/{filename}/train_loss.txt", "w").close()
+            open(f"log/{filename}/val_loss.txt", "w").close()
 
-    # Mulit-GPU
-    init_process_group(backend="nccl")
+        # Checkpoints
+        if not os.path.exists(os.path.join(config["paths"]["checkpoints"], filename)):
+            os.mkdir(os.path.join(config["paths"]["checkpoints"], filename))
 
     # Data
     train_data = NuScencesMaps(
@@ -79,9 +87,9 @@ def main(config_name):
     trainer = Trainer(
         model, trainloader, valloader, optimizer, scheduler, criterion, config
     )
-    torch.cuda.empty_cache()
     trainer.train()
 
+    # DDP
     destroy_process_group()
 
 

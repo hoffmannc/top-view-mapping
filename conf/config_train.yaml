@@ -1,8 +1,8 @@
 training:
-  num_epochs: 50
+  num_epochs: 100
   batch_size: 8
-  lr: 5.0e-4
-  lr_decay: 0.9
+  lr: 0.001
+  lr_decay: 0.95
   train_split: train_split
   val_split: val_split
 model:
