@@ -1,5 +1,6 @@
 import yaml
 import os
+import sys
 
 import torch
 from torch import optim
@@ -13,9 +14,9 @@ from src.utils import dice_loss_mean
 from src.trainer import Trainer
 
 
-def main():
+def main(config_name):
     # Configuration
-    with open("conf/config.yaml") as f:
+    with open(f"conf/{config_name}.yaml") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
 
     # Log files
@@ -64,13 +65,20 @@ def main():
     # Optimizer
     optimizer = optim.Adam(model.parameters(), config["training"]["lr"])
 
+    # Scheduler
+    scheduler = optim.lr_scheduler.ExponentialLR(
+        optimizer, config["training"]["lr_decay"]
+    )
+
     # Reproducability
     seed = 42
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
 
     # MAIN
-    trainer = Trainer(model, trainloader, valloader, optimizer, criterion, config)
+    trainer = Trainer(
+        model, trainloader, valloader, optimizer, scheduler, criterion, config
+    )
     torch.cuda.empty_cache()
     trainer.train()
 
@@ -78,4 +86,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    config_name = str(sys.argv[1])
+    main(config_name)

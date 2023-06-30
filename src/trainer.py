@@ -15,6 +15,7 @@ class Trainer:
         trainloader: DataLoader,
         valloader: DataLoader,
         optimizer: torch.optim.Optimizer,
+        scheduler: torch.optim.lr_scheduler,
         criterion: Callable,
         config: dict,
     ):
@@ -28,15 +29,17 @@ class Trainer:
         self.gpu_id = int(os.environ["LOCAL_RANK"])
         self.model = model.to(self.gpu_id)
         self.model = DDP(self.model, device_ids=[self.gpu_id])
-        self._load_latest_checkpoint()
 
         self.trainloader = trainloader
         self.valloader = valloader
         self.optimizer = optimizer
+        self.scheduler = scheduler
         self.criterion = criterion
 
         self.num_epochs = config["training"]["num_epochs"]
         self.batch_size = config["training"]["batch_size"]
+
+        self._load_latest_checkpoint()
 
     def _run_epoch(self, epoch: int):
         train_epoch_loss = 0
@@ -140,22 +143,25 @@ class Trainer:
             checkpoint = {}
             checkpoint["MODEL_STATE"] = self.model.module.state_dict()
             checkpoint["EPOCHS_RUN"] = epoch
-            name = f"/{self.filename}_E{epoch+1}.pt"
-            torch.save(checkpoint, self.checkpoints_path + name)
+            checkpoint["SCHEDULER"] = self.scheduler.state_dict()
+            name = f"{self.filename}_E{epoch+1}.pt"
+            torch.save(
+                checkpoint, os.path.join(self.checkpoints_path, self.filename, name)
+            )
             print(f"[GPU {self.gpu_id}] | S | E{epoch+1}")
 
     def _load_checkpoint(self, name):
-        checkpoint = torch.load(os.path.join(self.checkpoints_path, name))
+        checkpoint = torch.load(
+            os.path.join(self.checkpoints_path, self.filename, name)
+        )
         self.model.module.load_state_dict(checkpoint["MODEL_STATE"])
         epochs_run = checkpoint["EPOCHS_RUN"]
+        self.scheduler.load_state_dict(checkpoint["SCHEDULER"])
         self.epoch_start = epochs_run + 1
         print(f"[GPU {self.gpu_id}] | L | E{epochs_run + 1}")
 
     def _load_latest_checkpoint(self):
-        checkpoints_all = os.listdir(self.checkpoints_path)
-        checkpoints = [
-            checkpoint for checkpoint in checkpoints_all if self.filename in checkpoint
-        ]
+        checkpoints = os.listdir(os.path.join(self.checkpoints_path, self.filename))
         if checkpoints:
             checkpoints_sorted = sorted(checkpoints)
             self._load_checkpoint(checkpoints_sorted[-1])
@@ -166,4 +172,5 @@ class Trainer:
             self._run_epoch(epoch)
             self.model.eval()
             self._eval_epoch(epoch)
+            self.scheduler.step()
             self._save_checkpoint(epoch)

@@ -1,9 +1,10 @@
 training:
-  num_epochs: 40
-  batch_size: 8
-  lr: 5.0e-5
-  train_split: train_split
-  val_split: val_split
+  num_epochs: 10
+  batch_size: 2
+  lr: 5.0e-4
+  lr_decay: 0.9
+  train_split: debug_train_split
+  val_split: debug_val_split
 model:
   num_classes: 4
   frontend: "resnet50"
@@ -22,4 +23,4 @@ paths:
   nuscenes: "data/nuscenes"
   unity: "data/unity"
   checkpoints: "checkpoints"
-filename: "strawberry"
+filename: "apple"
