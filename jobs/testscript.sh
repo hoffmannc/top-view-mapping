@@ -1,7 +1,7 @@
 #!/bin/sh
 #BSUB -q gpuv100
 #BSUB -J test
-#BSUB -n 2
+#BSUB -n 8
 #BSUB -gpu "num=2:mode=exclusive_process:mps=yes"
 #BSUB -R "span[hosts=1]"
 #BSUB -W 24:00
@@ -10,7 +10,7 @@
 #BSUB -e %J.err
 #BSUB -R "select[gpu32gb]"
 
-#BSUB -m "n-62-20-16"
+#BSUB -m "n-62-11-13"
 
 
 nodes=$LSB_HOSTS

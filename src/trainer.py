@@ -56,11 +56,11 @@ class Trainer:
             train_epoch_loss += train_batch_loss
 
         print(
-            f"[GPU {self.global_rank}] | T | E{epoch+1} | {train_epoch_loss/(len(self.trainloader) * self.batch_size)}"
+            f"[GPU {self.global_rank}] | E{epoch+1} | Train | {train_epoch_loss/(len(self.trainloader) * self.batch_size)}"
         )
         with open(f"log/{self.filename}/train_loss.txt", "a") as f:
             f.write(
-                f"E{epoch} GPU{self.global_rank} "
+                f"GPU{self.global_rank} E{epoch} "
                 + str(
                     (
                         train_epoch_loss / (len(self.trainloader) * self.batch_size)
@@ -117,11 +117,11 @@ class Trainer:
             val_epoch_loss += val_batch_loss
 
         print(
-            f"[GPU {self.global_rank}] | V | E{epoch+1} | {val_epoch_loss / (len(self.valloader) * self.batch_size)}"
+            f"[GPU {self.global_rank}] | E{epoch+1} | Validate | {val_epoch_loss / (len(self.valloader) * self.batch_size)}"
         )
         with open(f"log/{self.filename}/val_loss.txt", "a") as f:
             f.write(
-                f"E{epoch} GPU{self.global_rank} "
+                f"GPU{self.global_rank} E{epoch} "
                 + str((val_epoch_loss / (len(self.valloader) * self.batch_size)).item())
                 + "\n"
             )
@@ -152,7 +152,7 @@ class Trainer:
             torch.save(
                 checkpoint, os.path.join(self.checkpoints_path, self.filename, name)
             )
-            print(f"[GPU {self.local_rank}] | S | E{epoch+1}")
+            print(f"[GPU {self.local_rank}] | E{epoch+1} | Save")
 
     def _load_checkpoint(self, name):
         checkpoint = torch.load(
@@ -163,7 +163,7 @@ class Trainer:
         self.optimizer.load_state_dict(checkpoint["OPTIMIZER"])
         self.scheduler.load_state_dict(checkpoint["SCHEDULER"])
         self.epoch_start = epochs_run + 1
-        print(f"[GPU {self.local_rank}] | L | E{epochs_run + 1}")
+        print(f"[GPU {self.local_rank}] | E{epochs_run + 1} | Load")
 
     def _load_latest_checkpoint(self):
         checkpoints = os.listdir(os.path.join(self.checkpoints_path, self.filename))
@@ -173,6 +173,7 @@ class Trainer:
 
     def train(self):
         for epoch in range(self.epoch_start, self.num_epochs):
+            print(f"[GPU {self.global_rank}] | E{epoch+1} | Start")
             self.model.train()
             self._run_epoch(epoch)
             self.model.eval()

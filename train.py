@@ -24,7 +24,7 @@ def main(config_name):
         config = yaml.load(f, Loader=yaml.FullLoader)
 
     # Files
-    gpu_id = int(os.environ["LOCAL_RANK"])
+    gpu_id = int(os.environ["RANK"])
     if gpu_id == 0:
         # Logs
         filename = config["filename"]
@@ -45,7 +45,7 @@ def main(config_name):
         train_data,
         batch_size=config["training"]["batch_size"],
         shuffle=False,
-        num_workers=0,
+        num_workers=8,
         drop_last=True,
         pin_memory=False,
         sampler=DistributedSampler(train_data),
@@ -58,7 +58,7 @@ def main(config_name):
         val_data,
         batch_size=config["training"]["batch_size"],
         shuffle=False,
-        num_workers=0,
+        num_workers=8,
         drop_last=True,
         pin_memory=False,
         sampler=DistributedSampler(val_data),
