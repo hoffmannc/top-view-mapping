@@ -152,7 +152,7 @@ class Trainer:
             torch.save(
                 checkpoint, os.path.join(self.checkpoints_path, self.filename, name)
             )
-            print(f"[GPU {self.local_rank}] | E{epoch+1} | Save")
+            print(f"[GPU {self.global_rank}] | E{epoch+1} | Save")
 
     def _load_checkpoint(self, name):
         checkpoint = torch.load(
@@ -163,12 +163,14 @@ class Trainer:
         self.optimizer.load_state_dict(checkpoint["OPTIMIZER"])
         self.scheduler.load_state_dict(checkpoint["SCHEDULER"])
         self.epoch_start = epochs_run + 1
-        print(f"[GPU {self.local_rank}] | E{epochs_run + 1} | Load")
+        print(f"[GPU {self.global_rank}] | E{epochs_run + 1} | Load")
 
     def _load_latest_checkpoint(self):
         checkpoints = os.listdir(os.path.join(self.checkpoints_path, self.filename))
         if checkpoints:
-            checkpoints_sorted = sorted(checkpoints)
+            checkpoints_sorted = sorted(
+                checkpoints, key=lambda x: int(x.split("E")[-1].split(".")[0])
+            )
             self._load_checkpoint(checkpoints_sorted[-1])
 
     def train(self):
