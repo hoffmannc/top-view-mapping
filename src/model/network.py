@@ -992,6 +992,7 @@ class PyrOccTranDetr_S_0904_old_rep100x100_out100x100(nn.Module):
 
     def __init__(
         self,
+        name,
         num_classes=11,
         frontend="resnet50",
         grid_res=1.0,
