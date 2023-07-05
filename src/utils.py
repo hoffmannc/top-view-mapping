@@ -26,7 +26,7 @@ def upsample_labels(labels, size):
 
 
 def show_sample(dataset, i):
-    image, _, label, mask = dataset[i]
+    image, _, label, _, mask = dataset[i]
 
     _, ax = plt.subplots(2, 3, figsize=(10, 5))
     ax[0, 0].imshow(image.permute(1, 2, 0))
@@ -73,10 +73,10 @@ def dice_loss_mean(pred, label):
 
 def label2image(label: torch.Tensor):
     image = torch.zeros((label.shape[1], label.shape[2], 3))
-    colors = ["black", "red", "green", "yellow"]
+    colors = ["white", "blue", "green", "red"]
     for i in range(4):
-        mask = label == i
-        mask_3d = mask.permute([1, 2, 0]).expand(image.shape)
+        mask = label[i] == 1
+        mask_3d = mask.unsqueeze(dim=0).permute([1, 2, 0]).expand(image.shape)
         color_image = to_tensor(
             Image.new("RGB", (image.shape[0], image.shape[1]), colors[i])
         )
