@@ -1,5 +1,6 @@
 import yaml
 import os
+import sys
 
 import torch
 from torch import optim
@@ -13,22 +14,28 @@ from src.utils import dice_loss_mean
 from src.trainer import Trainer
 
 
-def main():
+def main(config_name):
+    # DDP
+    init_process_group(backend="nccl")
+    torch.cuda.empty_cache()
+
     # Configuration
-    with open("conf/config.yaml") as f:
+    with open(f"conf/{config_name}.yaml") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
 
-    # Log files
-    filename = config["filename"]
-    if not os.path.exists(f"log/{filename}"):
-        os.mkdir(f"log/{filename}")
-    open(f"log/{filename}/train_batch_loss_100.txt", "w")
-    open(f"log/{filename}/train_epoch_loss.txt", "w")
-    open(f"log/{filename}/val_batch_loss_100.txt", "w")
-    open(f"log/{filename}/val_epoch_loss.txt", "w")
+    # Files
+    gpu_id = int(os.environ["RANK"])
+    if gpu_id == 0:
+        # Logs
+        filename = config["filename"]
+        if not os.path.exists(f"log/{filename}"):
+            os.mkdir(f"log/{filename}")
+            open(f"log/{filename}/train_loss.txt", "w").close()
+            open(f"log/{filename}/val_loss.txt", "w").close()
 
-    # Mulit-GPU
-    init_process_group(backend="nccl")
+        # Checkpoints
+        if not os.path.exists(os.path.join(config["paths"]["checkpoints"], filename)):
+            os.mkdir(os.path.join(config["paths"]["checkpoints"], filename))
 
     # Data
     train_data = NuScencesMaps(
@@ -38,7 +45,7 @@ def main():
         train_data,
         batch_size=config["training"]["batch_size"],
         shuffle=False,
-        num_workers=0,
+        num_workers=8,
         drop_last=True,
         pin_memory=False,
         sampler=DistributedSampler(train_data),
@@ -51,7 +58,7 @@ def main():
         val_data,
         batch_size=config["training"]["batch_size"],
         shuffle=False,
-        num_workers=0,
+        num_workers=8,
         drop_last=True,
         pin_memory=False,
         sampler=DistributedSampler(val_data),
@@ -66,18 +73,26 @@ def main():
     # Optimizer
     optimizer = optim.Adam(model.parameters(), config["training"]["lr"])
 
+    # Scheduler
+    scheduler = optim.lr_scheduler.ExponentialLR(
+        optimizer, config["training"]["lr_decay"]
+    )
+
     # Reproducability
     seed = 42
     torch.manual_seed(seed)
     torch.cuda.manual_seed(seed)
 
     # MAIN
-    trainer = Trainer(model, trainloader, valloader, optimizer, criterion, config)
-    torch.cuda.empty_cache()
+    trainer = Trainer(
+        model, trainloader, valloader, optimizer, scheduler, criterion, config
+    )
     trainer.train()
 
+    # DDP
     destroy_process_group()
 
 
 if __name__ == "__main__":
-    main()
+    config_name = str(sys.argv[1])
+    main(config_name)

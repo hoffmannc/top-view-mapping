@@ -15,66 +15,53 @@ class Trainer:
         trainloader: DataLoader,
         valloader: DataLoader,
         optimizer: torch.optim.Optimizer,
+        scheduler: torch.optim.lr_scheduler.ExponentialLR,
         criterion: Callable,
         config: dict,
     ):
         self.checkpoints_path = config["paths"]["checkpoints"]
+        self.filename = config["filename"]
 
         self.epoch_start = 0
 
         self.model = model
 
-        self.gpu_id = int(os.environ["LOCAL_RANK"])
-        self.model = model.to(self.gpu_id)
-        self.model = DDP(self.model, device_ids=[self.gpu_id])
-        self._load_latest_checkpoint()
+        self.local_rank = int(os.environ["LOCAL_RANK"])
+        self.global_rank = int(os.environ["RANK"])
+        self.model = model.to(self.local_rank)
+        self.model = DDP(self.model, device_ids=[self.local_rank])
 
         self.trainloader = trainloader
         self.valloader = valloader
         self.optimizer = optimizer
+        self.scheduler = scheduler
         self.criterion = criterion
 
         self.num_epochs = config["training"]["num_epochs"]
         self.batch_size = config["training"]["batch_size"]
 
-        self.filename = config["filename"]
+        self._load_latest_checkpoint()
 
     def _run_epoch(self, epoch: int):
         train_epoch_loss = 0
-        train_batch_loss_100 = 0
-        for i, (image, calib, target, grid, vis_mask) in enumerate(
-            tqdm(
-                self.trainloader,
-                desc=f"[GPU {self.gpu_id}] | T | E{epoch+1}",
-                total=len(self.trainloader),
-                ncols=100,
-            )
-        ):
+        for i, (image, calib, target, grid, vis_mask) in enumerate(self.trainloader):
             image, calib, target, grid, vis_mask = (
-                image.to(torch.float32).to(self.gpu_id),
-                calib.to(torch.float32).to(self.gpu_id),
-                target.to(torch.float32).to(self.gpu_id),
-                grid.to(torch.float32).to(self.gpu_id),
-                vis_mask.to(torch.float32).to(self.gpu_id),
+                image.to(torch.float32).to(self.local_rank),
+                calib.to(torch.float32).to(self.local_rank),
+                target.to(torch.float32).to(self.local_rank),
+                grid.to(torch.float32).to(self.local_rank),
+                vis_mask.to(torch.float32).to(self.local_rank),
             )
             train_batch_loss = self._run_batch(image, calib, target, vis_mask, grid)
             train_epoch_loss += train_batch_loss
-            train_batch_loss_100 += train_batch_loss
-
-            if (i % 100 == 0) and (i != 0):
-                with open(f"log/{self.filename}/train_batch_loss_100.txt", "a") as f:
-                    f.write(
-                        str((train_batch_loss_100 / (self.batch_size * 100)).item())
-                        + "\n"
-                    )
-                train_batch_loss_100 = 0
 
         print(
-            f"[GPU {self.gpu_id}] | T | E{epoch+1} | {train_epoch_loss/(len(self.trainloader) * self.batch_size)}"
+            f"[GPU {self.global_rank}] | E{epoch+1} | Train | {train_epoch_loss/(len(self.trainloader) * self.batch_size)}"
         )
-        with open(f"log/{self.filename}/train_epoch_loss.txt", "a") as f:
+        with open(f"log/{self.filename}/train_loss.txt", "a") as f:
             f.write(
-                str(
+                f"GPU{self.global_rank} E{epoch} "
+                + str(
                     (
                         train_epoch_loss / (len(self.trainloader) * self.batch_size)
                     ).item()
@@ -118,40 +105,24 @@ class Trainer:
 
     def _eval_epoch(self, epoch: int):
         val_epoch_loss = 0
-        val_batch_loss_100 = 0
-        for i, (image, calib, target, grid, vis_mask) in enumerate(
-            tqdm(
-                self.valloader,
-                desc=f"[GPU {self.gpu_id}] | V | E{epoch+1}",
-                total=len(self.valloader),
-                ncols=100,
-            )
-        ):
+        for i, (image, calib, target, grid, vis_mask) in enumerate(self.valloader):
             image, calib, target, grid, vis_mask = (
-                image.to(torch.float32).to(self.gpu_id),
-                calib.to(torch.float32).to(self.gpu_id),
-                target.to(torch.float32).to(self.gpu_id),
-                grid.to(torch.float32).to(self.gpu_id),
-                vis_mask.to(torch.float32).to(self.gpu_id),
+                image.to(torch.float32).to(self.local_rank),
+                calib.to(torch.float32).to(self.local_rank),
+                target.to(torch.float32).to(self.local_rank),
+                grid.to(torch.float32).to(self.local_rank),
+                vis_mask.to(torch.float32).to(self.local_rank),
             )
             val_batch_loss = self._eval_batch(image, calib, target, vis_mask, grid)
             val_epoch_loss += val_batch_loss
-            val_batch_loss_100 += val_batch_loss
-
-            if (i % 100 == 0) and (i != 0):
-                with open(f"log/{self.filename}/val_batch_loss_100.txt", "a") as f:
-                    f.write(
-                        str((val_batch_loss_100 / (self.batch_size * 100)).item())
-                        + "\n"
-                    )
-                val_batch_loss_100 = 0
 
         print(
-            f"[GPU {self.gpu_id}] | V | E{epoch+1} | {val_epoch_loss / (len(self.valloader) * self.batch_size)}"
+            f"[GPU {self.global_rank}] | E{epoch+1} | Validate | {val_epoch_loss / (len(self.valloader) * self.batch_size)}"
         )
-        with open(f"log/{self.filename}/val_epoch_loss.txt", "a") as f:
+        with open(f"log/{self.filename}/val_loss.txt", "a") as f:
             f.write(
-                str((val_epoch_loss / (len(self.valloader) * self.batch_size)).item())
+                f"GPU{self.global_rank} E{epoch} "
+                + str((val_epoch_loss / (len(self.valloader) * self.batch_size)).item())
                 + "\n"
             )
 
@@ -171,31 +142,43 @@ class Trainer:
         return loss
 
     def _save_checkpoint(self, epoch: int):
-        if self.gpu_id == 0:
+        if self.global_rank == 0:
             checkpoint = {}
             checkpoint["MODEL_STATE"] = self.model.module.state_dict()
             checkpoint["EPOCHS_RUN"] = epoch
-            name = f"/{self.filename}_E{epoch+1}.pt"
-            torch.save(checkpoint, self.checkpoints_path + name)
-            print(f"[GPU {self.gpu_id}] | S | E{epoch+1}")
+            checkpoint["OPTIMIZER"] = self.optimizer.state_dict()
+            checkpoint["SCHEDULER"] = self.scheduler.state_dict()
+            name = f"{self.filename}_E{epoch+1}.pt"
+            torch.save(
+                checkpoint, os.path.join(self.checkpoints_path, self.filename, name)
+            )
+            print(f"[GPU {self.global_rank}] | E{epoch+1} | Save")
 
     def _load_checkpoint(self, name):
-        checkpoint = torch.load(os.path.join(self.checkpoints_path, name))
+        checkpoint = torch.load(
+            os.path.join(self.checkpoints_path, self.filename, name)
+        )
         self.model.module.load_state_dict(checkpoint["MODEL_STATE"])
         epochs_run = checkpoint["EPOCHS_RUN"]
+        self.optimizer.load_state_dict(checkpoint["OPTIMIZER"])
+        self.scheduler.load_state_dict(checkpoint["SCHEDULER"])
         self.epoch_start = epochs_run + 1
-        print(f"[GPU {self.gpu_id}] | L | E{epochs_run + 1}")
+        print(f"[GPU {self.global_rank}] | E{epochs_run + 1} | Load")
 
     def _load_latest_checkpoint(self):
-        checkpoints = os.listdir(self.checkpoints_path)
+        checkpoints = os.listdir(os.path.join(self.checkpoints_path, self.filename))
         if checkpoints:
-            checkpoints_sorted = sorted(checkpoints)
+            checkpoints_sorted = sorted(
+                checkpoints, key=lambda x: int(x.split("E")[-1].split(".")[0])
+            )
             self._load_checkpoint(checkpoints_sorted[-1])
 
     def train(self):
         for epoch in range(self.epoch_start, self.num_epochs):
+            print(f"[GPU {self.global_rank}] | E{epoch+1} | Start")
             self.model.train()
             self._run_epoch(epoch)
             self.model.eval()
             self._eval_epoch(epoch)
+            self.scheduler.step()
             self._save_checkpoint(epoch)

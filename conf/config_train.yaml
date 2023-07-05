@@ -1,7 +1,8 @@
 training:
-  num_epochs: 5
+  num_epochs: 100
   batch_size: 8
-  lr: 5.0e-5
+  lr: 0.0005
+  lr_decay: 0.95
   train_split: train_split
   val_split: val_split
 model:
@@ -22,4 +23,4 @@ paths:
   nuscenes: "data/nuscenes"
   unity: "data/unity"
   checkpoints: "checkpoints"
-filename: "2023-06-03"
+filename: "mango"
