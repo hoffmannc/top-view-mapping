@@ -9,7 +9,7 @@ from torch.utils.data.distributed import DistributedSampler
 from torch.distributed import init_process_group, destroy_process_group
 
 from src.data.dataset_nuscenes import NuScencesMaps
-from src.model.network import PyrOccTranDetr_S_0904_old_2DPosEncBEV as Model
+import src.model.network as networks
 from src.utils import dice_loss_mean
 from src.trainer import Trainer
 
@@ -65,7 +65,7 @@ def main(config_name):
     )
 
     # Model
-    model = Model(**config["model"])
+    model = networks.__dict__[config["model"]["name"]](**config["model"])
 
     # Loss
     criterion = dice_loss_mean
