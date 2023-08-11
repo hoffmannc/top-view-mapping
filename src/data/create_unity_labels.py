@@ -1,15 +1,13 @@
-import sys
 import os
 import json
 from tqdm import tqdm
 import numpy as np
 import torch
-import matplotlib.pyplot as plt
 from PIL import Image
 from torchvision.transforms.functional import to_tensor
 from torch.nn.functional import interpolate
 from torchvision.transforms.functional import rotate
-from scipy.ndimage import shift  # type: ignore
+from scipy.ndimage import shift
 
 from explore_unity_scenario import boundingboxes2map
 from utils_data import decode_labels, encode_labels, box2map, label2image
@@ -25,7 +23,7 @@ def main():
     resolution = 20
 
     for i in range(n_scenarios):
-        map = base_scenario
+        map = base_scenario.clone()
         name = f"scenario{i+1}"
         file = open(f"data/unity/scenarios/{name}.json")
         elements = json.load(file)
@@ -55,12 +53,7 @@ def main():
             z = ego["Z"]
             angle = yaw
 
-            temp = map
-            # temp = np.roll(
-            #     map,
-            #     shift=(-int(x * resolution), -int(z * resolution)),
-            #     axis=(1, 2),
-            # )
+            temp = map.clone()
             shifted = shift(
                 temp,
                 shift=(0, -int(x * resolution), -int(z * resolution)),
@@ -72,7 +65,7 @@ def main():
 
             for view_angle, view in zip(view_angles, views):
                 rotated = rotate(
-                    torch.Tensor(shifted),
+                    torch.Tensor(shifted).clone(),
                     angle=angle + 90 + view_angle,
                 )
 

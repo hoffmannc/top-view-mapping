@@ -4,7 +4,7 @@ import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-from utils_data import box2map
+from utils_data import box2map, correct_bb
 
 
 def boundingboxes2map(keywords, plot=False):
@@ -24,6 +24,7 @@ def boundingboxes2map(keywords, plot=False):
             angle = element["Rotation_Y"]
             w = element["Size_X"]
             h = element["Size_Z"]
+            w, h = correct_bb(name, w, h)
             temp = box2map((x, z, angle), (w, h), map_size, resolution)
             map = map + temp
 

@@ -6,8 +6,8 @@ from utils_data import encode_labels
 
 
 def main():
-    vehicle_keywords = ["Truck", "Trailer"]
-    worker_keywords = []
+    vehicle_keywords = ["Truck", "Trailer", "SM_Veh_Excavator_02"]
+    worker_keywords = ["workermodelMesh"]
     object_keywords = ["Prop"]
 
     temp_vehicle = boundingboxes2map(vehicle_keywords, plot=False)

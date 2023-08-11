@@ -1,8 +1,10 @@
+import sys
 import numpy as np
 import torch
 from PIL import Image
 from torchvision.transforms.functional import to_tensor
 from scipy.ndimage import rotate  # type: ignore
+import cv2
 
 
 def decode_labels(labels, num_classes):
@@ -46,3 +48,59 @@ def label2image(label: torch.Tensor):
         color_image = torch.permute(color_image, (1, 2, 0))
         image = torch.where(mask_3d, color_image, image)
     return image
+
+
+def correct_bb(name, w, h):
+    if name == "Truck 6":
+        return 2.3, 7.7
+    elif name == "Truck 1" or name == "Truck 1 (1)":
+        return 2.3, 5.5
+    elif name == "SM_Veh_Excavator_02":
+        return 1.2, 2.0
+    else:
+        return w, h
+
+
+def get_C902e_parameters():
+    fx = 1394.6027293299926
+    fy = 1394.6027293299926
+    cx = 995.588675691456
+    cy = 599.3212928484164
+
+    M = np.array([[fx, 0, cx], [0, fy, cy], [0, 0, 1]])
+
+    dist = (
+        0.11480806073904032,
+        -0.21946985653851792,
+        0.0012002116999769957,
+        0.008564577708855225,
+        0.11274677130853494,
+    )
+
+    return M, dist
+
+
+def get_frame(i, file="data/real/drone/drone.mp4"):
+    capture = cv2.VideoCapture(file)
+    capture.set(cv2.CAP_PROP_POS_FRAMES, i)
+    _, frame = capture.read()
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    Image.fromarray(frame).save(f"frame_{i}.png")
+
+
+def create_vis_mask(FOV):
+    angle = np.deg2rad(FOV / 2)
+    mask = np.zeros((100, 100))
+
+    def R(x):
+        return np.array([[np.cos(x), -np.sin(x)], [np.sin(x), np.cos(x)]])
+
+    o = np.array([50, 0])
+    r = R(-angle) @ np.array([0, 200]) + np.array([50, 0])
+    l = R(angle) @ np.array([0, 200]) + np.array([50, 0])
+
+    points = np.stack([o, l, r]).astype(int)
+
+    mask = cv2.fillPoly(mask, [points], 1)
+
+    return torch.from_numpy(mask)

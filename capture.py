@@ -18,8 +18,8 @@ def main(cam, name, write: Synchronized, stop: Synchronized):
     file = open(f"{path_name}/timestamps/CAM{cam}.txt", "w")
 
     cap = cv2.VideoCapture(cam, cv2.CAP_AVFOUNDATION)
-    cap.set(3, 864)
-    cap.set(4, 480)
+    cap.set(3, 1920)
+    cap.set(4, 1080)
 
     frame_width = int(cap.get(3))
     frame_height = int(cap.get(4))
