@@ -90,9 +90,11 @@ def resnet_fpn_backbone(backbone_name, pretrained):
         pretrained=pretrained, norm_layer=misc_nn_ops.FrozenBatchNorm2d
     )
     # freeze layers
+    #
+    #     if "layer2" not in name and "layer3" not in name and "layer4" not in name:
+    #         parameter.requires_grad_(False)
     for name, parameter in backbone.named_parameters():
-        if "layer2" not in name and "layer3" not in name and "layer4" not in name:
-            parameter.requires_grad_(False)
+        parameter.requires_grad_(False)
 
     return_layers = {"layer1": "0", "layer2": "1", "layer3": "2", "layer4": "3"}
 

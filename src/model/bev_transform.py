@@ -113,7 +113,7 @@ class BEVT_04(nn.Module):
         )
 
         grid_ones = torch.ones_like(grid)
-        grid_ones[..., 0] *= norm_scale_x.view(batch_size, -1, 1).cuda()
+        grid_ones[..., 0] *= norm_scale_x.view(batch_size, -1, 1).to(grid_ones.device)
 
         # Normalise grid to [-1, 1]
         norm_grid = grid / grid_ones
@@ -181,7 +181,6 @@ class BEVT_H(nn.Module):
         self.cell_size = cell_size
 
     def forward(self, features, calib, grid):
-
         # Convolve horizontally first
         features = self.horizontal(features)
 
@@ -253,7 +252,7 @@ class BEVT_H(nn.Module):
         )
 
         grid_ones = torch.ones_like(grid)
-        grid_ones[..., 0] *= norm_scale_x.view(batch_size, -1, 1).cuda()
+        grid_ones[..., 0] *= norm_scale_x.view(batch_size, -1, 1).to(grid_ones.device)
 
         # Normalise grid to [-1, 1]
         norm_grid = grid / grid_ones
@@ -372,7 +371,7 @@ class BEVT(nn.Module):
         )
 
         grid_ones = torch.ones_like(grid)
-        grid_ones[..., 0] *= norm_scale_x.view(batch_size, -1, 1).cuda()
+        grid_ones[..., 0] *= norm_scale_x.view(batch_size, -1, 1).to(grid_ones.device)
 
         # Normalise grid to [-1, 1]
         norm_grid = grid / grid_ones
@@ -396,7 +395,6 @@ class sample_polar2cart(nn.Module):
         self.cell_size = cell_size
 
     def forward(self, features, calib, grid):
-
         # Normalise grid to [-1, 1]
         norm_grid = self.normalise_grid(grid, calib)
 
@@ -438,7 +436,7 @@ class sample_polar2cart(nn.Module):
         )
 
         grid_ones = torch.ones_like(grid)
-        grid_ones[..., 0] *= norm_scale_x.view(batch_size, -1, 1).to(device=grid.device)
+        grid_ones[..., 0] *= norm_scale_x.view(batch_size, -1, 1).to(grid_ones.device)
 
         # Normalise grid to [-1, 1]
         norm_grid = grid / grid_ones
