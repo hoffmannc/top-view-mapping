@@ -1,0 +1,27 @@
+training:
+  num_epochs: 100
+  batch_size: 8
+  lr: 1.0e-5
+  lr_decay: 0.99
+  train_split: train_split
+  val_split: val_split
+modelname: PyrOccTranDetr_S_0904_old_rep100x100_out100x100
+model:
+  num_classes: 4
+  frontend: resnet50
+  grid_res: 0.5
+  pretrained: True
+  img_dims: [1600, 900]
+  z_range: [1.0, 9.0, 21.0, 39.0, 51.0]
+  h_cropped: [93.0, 61.0, 57.0, 66.0]
+  dla_norm: GroupNorm
+  additions_BEVT_linear: False
+  additions_BEVT_conv: False
+  dla_l1_n_channels: 64
+  n_enc_layers: 2
+  n_dec_layers: 2
+paths:
+  nuscenes: data/nuscenes
+  unity: data/unity
+  checkpoints: checkpoints
+filename: apple

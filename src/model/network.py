@@ -8,25 +8,9 @@ import torch.nn.functional as F
 from src.model.backbone_utils import resnet_fpn_backbone, resnet_fpn_backbone_roddick
 from src.model import resnet
 from src.model.bev_transform import BEVT, sample_polar2cart
-from src.model.general_modules import (
-    S3D_TemporalBlock_Comp,
-    Flatten,
-    WidthDownsamplers,
-    MLP,
-    MultiHeadAttentionMap,
-    AggregateNode_Cat,
-    ResNetBlock_GN,
-    Identity,
-    DLA_Node,
-    DLA_Node_old,
-    IDA_up,
-    Down,
-    Down_old,
-    Up,
-    Upsample_old,
-    _resnet_bblock_enc_layer,
-    _resnet_bblock_enc_layer_old,
-)
+from src.model.general_modules import S3D_TemporalBlock_Comp, Flatten, WidthDownsamplers, MLP, MultiHeadAttentionMap, \
+    AggregateNode_Cat, ResNetBlock_GN, Identity, DLA_Node, DLA_Node_old, IDA_up, Down, Down_old, Up, Upsample_old, \
+    _resnet_bblock_enc_layer, _resnet_bblock_enc_layer_old
 from src.model.positional_encoding import (
     PositionalEncoding,
     PositionalEncoding2DwDropout,
@@ -63,6 +47,7 @@ class PyrOccTranDetrMonoInv_S_0904_old(nn.Module):
         n_enc_layers=2,
         n_dec_layers=2,
     ):
+
         super().__init__()
 
         self.image_height = img_dims[1]
@@ -142,10 +127,7 @@ class PyrOccTranDetrMonoInv_S_0904_old(nn.Module):
         self.sample64 = sample_polar2cart(z_range[1], z_range[0], grid_res)
 
         # Batch normalisation to BEV outputs
-        self.bev_bn = nn.Sequential(
-            nn.GroupNorm(16, 256),
-            nn.ReLU(),
-        )
+        self.bev_bn = nn.Sequential(nn.GroupNorm(16, 256), nn.ReLU(),)
 
         # Topdown DLA
         n_channels = np.array(2 ** np.arange(4) * dla_l1_n_channels, dtype=int)
@@ -374,6 +356,7 @@ class PyrOccTranDetrMono_S_0904_old(nn.Module):
         n_enc_layers=2,
         n_dec_layers=2,
     ):
+
         super().__init__()
 
         self.image_height = img_dims[1]
@@ -453,10 +436,7 @@ class PyrOccTranDetrMono_S_0904_old(nn.Module):
         self.sample64 = sample_polar2cart(z_range[1], z_range[0], grid_res)
 
         # Batch normalisation to BEV outputs
-        self.bev_bn = nn.Sequential(
-            nn.GroupNorm(16, 256),
-            nn.ReLU(),
-        )
+        self.bev_bn = nn.Sequential(nn.GroupNorm(16, 256), nn.ReLU(),)
 
         # Topdown DLA
         n_channels = np.array(2 ** np.arange(4) * dla_l1_n_channels, dtype=int)
@@ -678,6 +658,7 @@ class PyrOccTranDetr_S_0904_old_AxialAttention(nn.Module):
         additions_BEVT_conv=False,
         dla_l1_n_channels=32,
     ):
+
         super().__init__()
 
         self.image_height = img_dims[1]
@@ -774,10 +755,7 @@ class PyrOccTranDetr_S_0904_old_AxialAttention(nn.Module):
         self.sample64 = sample_polar2cart(z_range[1], z_range[0], grid_res)
 
         # Batch normalisation to BEV outputs
-        self.bev_bn = nn.Sequential(
-            nn.GroupNorm(16, 256),
-            nn.ReLU(),
-        )
+        self.bev_bn = nn.Sequential(nn.GroupNorm(16, 256), nn.ReLU(),)
 
         # Topdown DLA
         n_channels = np.array(2 ** np.arange(4) * dla_l1_n_channels, dtype=int)
@@ -992,7 +970,6 @@ class PyrOccTranDetr_S_0904_old_rep100x100_out100x100(nn.Module):
 
     def __init__(
         self,
-        name,
         num_classes=11,
         frontend="resnet50",
         grid_res=1.0,
@@ -1007,6 +984,7 @@ class PyrOccTranDetr_S_0904_old_rep100x100_out100x100(nn.Module):
         n_enc_layers=2,
         n_dec_layers=2,
     ):
+
         super().__init__()
 
         self.image_height = img_dims[1]
@@ -1086,10 +1064,7 @@ class PyrOccTranDetr_S_0904_old_rep100x100_out100x100(nn.Module):
         self.sample64 = sample_polar2cart(z_range[1], z_range[0], grid_res)
 
         # # Batch normalisation to BEV outputs
-        # self.bev_bn = nn.Sequential(
-        #     nn.GroupNorm(16, 256),
-        #     nn.ReLU(),
-        # )
+        # self.bev_bn = nn.Sequential(nn.GroupNorm(16, 256), nn.ReLU(),)
 
         # Topdown DLA
         n_channels = np.array(2 ** np.arange(4) * dla_l1_n_channels, dtype=int)
@@ -1312,6 +1287,7 @@ class PyrOccTranDetr_S_0904_old_rep100x100_out100x100_swa(nn.Module):
         n_enc_layers=2,
         n_dec_layers=2,
     ):
+
         super().__init__()
 
         self.image_height = img_dims[1]
@@ -1391,10 +1367,7 @@ class PyrOccTranDetr_S_0904_old_rep100x100_out100x100_swa(nn.Module):
         self.sample64 = sample_polar2cart(z_range[1], z_range[0], grid_res)
 
         # Batch normalisation to BEV outputs
-        self.bev_bn = nn.Sequential(
-            nn.GroupNorm(16, 256),
-            nn.ReLU(),
-        )
+        self.bev_bn = nn.Sequential(nn.GroupNorm(16, 256), nn.ReLU(),)
 
         # Topdown DLA
         n_channels = np.array(2 ** np.arange(4) * dla_l1_n_channels, dtype=int)
@@ -1619,6 +1592,7 @@ class PyrOccTranDetr_S_0904_prenorm_old_rep100x100_out100x100(nn.Module):
         n_enc_layers=2,
         n_dec_layers=2,
     ):
+
         super().__init__()
 
         self.image_height = img_dims[1]
@@ -1698,10 +1672,7 @@ class PyrOccTranDetr_S_0904_prenorm_old_rep100x100_out100x100(nn.Module):
         self.sample64 = sample_polar2cart(z_range[1], z_range[0], grid_res)
 
         # Batch normalisation to BEV outputs
-        self.bev_bn = nn.Sequential(
-            nn.GroupNorm(16, 256),
-            nn.ReLU(),
-        )
+        self.bev_bn = nn.Sequential(nn.GroupNorm(16, 256), nn.ReLU(),)
 
         # Topdown DLA
         n_channels = np.array(2 ** np.arange(4) * dla_l1_n_channels, dtype=int)
@@ -1927,6 +1898,7 @@ class PyrOccTranDetr_M_0904_old_rep100x100_out100x100(nn.Module):
         lookahead_frames=0,
         dla_l1_n_channels=32,
     ):
+
         super().__init__()
 
         self.image_height = img_dims[1]
@@ -2007,8 +1979,7 @@ class PyrOccTranDetr_M_0904_old_rep100x100_out100x100(nn.Module):
             num_dimensions=3,  # number of axial dimensions (images is 2, video is 3, or more)
         )
         self.dynamics_norm = nn.Sequential(
-            nn.GroupNorm(256 // 8, 256),
-            nn.ReLU(inplace=True),
+            nn.GroupNorm(256 // 8, 256), nn.ReLU(inplace=True),
         )
 
         # BEV Polar to Cartesian Sampler
@@ -2018,10 +1989,7 @@ class PyrOccTranDetr_M_0904_old_rep100x100_out100x100(nn.Module):
         self.sample64 = sample_polar2cart(z_range[1], z_range[0], grid_res)
 
         # Batch normalisation to BEV outputs
-        self.bev_bn = nn.Sequential(
-            nn.GroupNorm(16, 256),
-            nn.ReLU(),
-        )
+        self.bev_bn = nn.Sequential(nn.GroupNorm(16, 256), nn.ReLU(),)
 
         # Topdown DLA
         n_channels = np.array(2 ** np.arange(4) * dla_l1_n_channels, dtype=int)
@@ -2262,6 +2230,7 @@ class PyrOccTranDetr_M_10_0904_old_rep50x50_out100x100(nn.Module):
         lookahead_frames=False,
         dla_l1_n_channels=32,
     ):
+
         super().__init__()
 
         self.image_height = img_dims[1]
@@ -2345,8 +2314,7 @@ class PyrOccTranDetr_M_10_0904_old_rep50x50_out100x100(nn.Module):
             num_dimensions=3,  # number of axial dimensions (images is 2, video is 3, or more)
         )
         self.dynamics_norm = nn.Sequential(
-            nn.GroupNorm(256 // 8, 256),
-            nn.ReLU(inplace=True),
+            nn.GroupNorm(256 // 8, 256), nn.ReLU(inplace=True),
         )
         # Upsample dynamics back to 100x100
         self.post_dynamics = Upsample_old(
@@ -2365,10 +2333,7 @@ class PyrOccTranDetr_M_10_0904_old_rep50x50_out100x100(nn.Module):
         self.sample64 = sample_polar2cart(z_range[1], z_range[0], grid_res)
 
         # Batch normalisation to BEV outputs
-        self.bev_bn = nn.Sequential(
-            nn.GroupNorm(16, 256),
-            nn.ReLU(),
-        )
+        self.bev_bn = nn.Sequential(nn.GroupNorm(16, 256), nn.ReLU(),)
 
         # Topdown DLA
         n_channels = np.array(2 ** np.arange(4) * dla_l1_n_channels, dtype=int)
@@ -2621,6 +2586,7 @@ class PyrOccTran_S_0904_old_rep100x100_out100x100(nn.Module):
         additions_BEVT_conv=False,
         dla_l1_n_channels=32,
     ):
+
         super().__init__()
 
         self.image_height = img_dims[1]
@@ -2692,10 +2658,7 @@ class PyrOccTran_S_0904_old_rep100x100_out100x100(nn.Module):
         self.sample64 = sample_polar2cart(z_range[1], z_range[0], grid_res)
 
         # Batch normalisation to BEV outputs
-        self.bev_bn = nn.Sequential(
-            nn.GroupNorm(16, 256),
-            nn.ReLU(),
-        )
+        self.bev_bn = nn.Sequential(nn.GroupNorm(16, 256), nn.ReLU(),)
 
         # Topdown DLA
         n_channels = np.array(2 ** np.arange(4) * dla_l1_n_channels, dtype=int)
@@ -2913,6 +2876,7 @@ class PyrOccTranDetr_S_0904_old_2Aux(nn.Module):
         n_enc_layers=2,
         n_dec_layers=2,
     ):
+
         super().__init__()
 
         self.image_height = img_dims[1]
@@ -2994,10 +2958,7 @@ class PyrOccTranDetr_S_0904_old_2Aux(nn.Module):
         self.sample64 = sample_polar2cart(z_range[1], z_range[0], grid_res)
 
         # Batch normalisation to BEV outputs
-        self.bev_bn = nn.Sequential(
-            nn.GroupNorm(16, 256),
-            nn.ReLU(),
-        )
+        self.bev_bn = nn.Sequential(nn.GroupNorm(16, 256), nn.ReLU(),)
 
         # Topdown DLA
         n_channels = np.array(2 ** np.arange(4) * dla_l1_n_channels, dtype=int)
@@ -3235,6 +3196,7 @@ class PyrOccTranDetr_S_0904_old_2DPosEnc(nn.Module):
         n_enc_layers=2,
         n_dec_layers=2,
     ):
+
         super().__init__()
 
         self.image_height = img_dims[1]
@@ -3315,10 +3277,7 @@ class PyrOccTranDetr_S_0904_old_2DPosEnc(nn.Module):
         self.sample64 = sample_polar2cart(z_range[1], z_range[0], grid_res)
 
         # Batch normalisation to BEV outputs
-        self.bev_bn = nn.Sequential(
-            nn.GroupNorm(16, 256),
-            nn.ReLU(),
-        )
+        self.bev_bn = nn.Sequential(nn.GroupNorm(16, 256), nn.ReLU(),)
 
         # Topdown DLA
         n_channels = np.array(2 ** np.arange(4) * dla_l1_n_channels, dtype=int)
@@ -3553,6 +3512,7 @@ class PyrOccTranDetr_S_0904_old_2DPosEnc_Big(nn.Module):
         n_enc_layers=2,
         n_dec_layers=2,
     ):
+
         super().__init__()
 
         self.image_height = img_dims[1]
@@ -3633,10 +3593,7 @@ class PyrOccTranDetr_S_0904_old_2DPosEnc_Big(nn.Module):
         self.sample64 = sample_polar2cart(z_range[1], z_range[0], grid_res)
 
         # Batch normalisation to BEV outputs
-        self.bev_bn = nn.Sequential(
-            nn.GroupNorm(16, 256),
-            nn.ReLU(),
-        )
+        self.bev_bn = nn.Sequential(nn.GroupNorm(16, 256), nn.ReLU(),)
 
         # Topdown DLA
         n_channels = np.array(2 ** np.arange(4) * dla_l1_n_channels, dtype=int)
@@ -3871,6 +3828,7 @@ class PyrOccTranDetr_S_0904_old_2DPosEncImg(nn.Module):
         n_enc_layers=2,
         n_dec_layers=2,
     ):
+
         super().__init__()
 
         self.image_height = img_dims[1]
@@ -3951,10 +3909,7 @@ class PyrOccTranDetr_S_0904_old_2DPosEncImg(nn.Module):
         self.sample64 = sample_polar2cart(z_range[1], z_range[0], grid_res)
 
         # Batch normalisation to BEV outputs
-        self.bev_bn = nn.Sequential(
-            nn.GroupNorm(16, 256),
-            nn.ReLU(),
-        )
+        self.bev_bn = nn.Sequential(nn.GroupNorm(16, 256), nn.ReLU(),)
 
         # Topdown DLA
         n_channels = np.array(2 ** np.arange(4) * dla_l1_n_channels, dtype=int)
@@ -4183,6 +4138,7 @@ class PyrOccTranDetr_S_0904_old_2DPosEncBEV(nn.Module):
         n_enc_layers=2,
         n_dec_layers=2,
     ):
+
         super().__init__()
 
         self.image_height = img_dims[1]
@@ -4263,10 +4219,7 @@ class PyrOccTranDetr_S_0904_old_2DPosEncBEV(nn.Module):
         self.sample64 = sample_polar2cart(z_range[1], z_range[0], grid_res)
 
         # Batch normalisation to BEV outputs
-        # self.bev_bn = nn.Sequential(
-        #     nn.GroupNorm(16, 256),
-        #     nn.ReLU(),
-        # )
+        self.bev_bn = nn.Sequential(nn.GroupNorm(16, 256), nn.ReLU(),)
 
         # Topdown DLA
         n_channels = np.array(2 ** np.arange(4) * dla_l1_n_channels, dtype=int)

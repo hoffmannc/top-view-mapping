@@ -1,15 +1,9 @@
 .DS_Store
 __pycache__
 .vscode
+
 /checkpoints
 /data
-test.py
-test2.py
-test3.py
-test4.py
-demo.py
 /log
+/figures
 /out
-test
-test.py
-test2.py

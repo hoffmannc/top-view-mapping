@@ -193,7 +193,7 @@ class PositionalEncoding2DwDropout(nn.Module):
         d_model = int(self.d_model / 2)
         div_term = torch.exp(
             torch.arange(0.0, d_model, 2) * -(math.log(10000.0) / d_model)
-        ).to(device=x.device)
+        ).cuda()
         pos_w = torch.arange(0.0, width // 2, device=x.device)
         pos_w = torch.cat([pos_w, pos_w.flip(dims=[0])]).unsqueeze(1)
         pos_h = torch.arange(0.0, height, device=x.device).unsqueeze(1)
