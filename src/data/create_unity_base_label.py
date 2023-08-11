@@ -6,6 +6,20 @@ from utils_data import encode_labels
 
 
 def main():
+    """
+    Create the base target of the entire environment to generate final targets.
+
+    Store the data in the root.
+
+    Args:
+        None
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
     vehicle_keywords = ["Truck", "Trailer", "SM_Veh_Excavator_02"]
     worker_keywords = ["workermodelMesh"]
     object_keywords = ["Prop"]

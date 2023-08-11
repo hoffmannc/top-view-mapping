@@ -1,0 +1,11 @@
+matplotlib
+numpy
+opencv_contrib_python
+opencv_python_headless
+Pillow
+PyYAML
+scipy
+torch
+torchvision
+tqdm
+wandb

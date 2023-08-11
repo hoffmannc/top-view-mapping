@@ -26,6 +26,20 @@ def map_list_elements(A, B):
 
 
 def main():
+    """
+    Create metadata for real-world dataset.
+
+    Store the data in the root.
+
+    Args:
+        None
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
     drone = cv2.VideoCapture("data/real/drone/drone.mp4")
     n_frames_drone = drone.get(cv2.CAP_PROP_FRAME_COUNT)
     fps_drone = drone.get(cv2.CAP_PROP_FPS)

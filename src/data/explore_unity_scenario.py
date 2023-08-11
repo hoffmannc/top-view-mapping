@@ -50,6 +50,20 @@ def points2map(keywords, plot=False):
 
 
 def main(keywords, plot):
+    """
+    Create Unity base label with only classes that contain keywords
+
+    Store the data in the root.
+
+    Args:
+        keyword (list): Keywords of classes to be plotted
+        plot (Bool): Plot the results
+    Returns:
+        None
+
+    Raises:
+        None
+    """
     file = open("data/unity/elements.json")
     elements = json.load(file)
     for element in tqdm(elements, ncols=100):

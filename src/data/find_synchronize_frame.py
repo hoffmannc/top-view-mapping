@@ -33,6 +33,25 @@ def setup_onboard(cam):
 
 
 def find(name, capture, timestamps, start):
+    """
+    Show video footage frame and corresponding frame ID on screen.
+
+    Store the data in the root.
+    Run this script in two termonals for both footages to be synchronized.
+    Find two corresponding frames.
+
+    Args:
+        name (str): camX or drone
+        capture (cv2.VideoCapture): Video capture object
+        timestamps (list): Corresponding timestamps to footage
+        start (int): Index of frame at the start
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
     index = bisect.bisect_left(timestamps, start)
     while True:
         capture.set(1, index)

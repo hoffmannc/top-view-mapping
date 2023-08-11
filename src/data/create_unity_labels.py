@@ -14,6 +14,21 @@ from utils_data import decode_labels, encode_labels, box2map, label2image
 
 
 def main():
+    """
+    Creates targets for unity dataset.
+
+    Store the data in the root.
+    Run create_unity_base_label.py before.
+
+    Args:
+        None
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
     n_scenarios = len(os.listdir("data/unity/scenarios"))
     base_scenario_path = "data/unity/base_scenario.png"
     base_scenario = to_tensor(Image.open(base_scenario_path)).long()

@@ -5,6 +5,21 @@ from PIL import Image
 
 
 def main():
+    """
+    Creates single frames from the drone footage.
+
+    Store the data in the root.
+    Run create_real_metadata.py before.
+
+    Args:
+        None
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
     file = open("data/real/metadata.json")
     samples = json.load(file)
     tokens = [sample["drone_token"] for sample in samples]

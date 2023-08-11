@@ -5,6 +5,21 @@ from tqdm import tqdm
 
 
 def main():
+    """
+    Creates single frames from all onboard camera footage.
+
+    Store the data in the root.
+    Run create_real_metadata.py before.
+
+    Args:
+        None
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
     file = open("data/real/metadata.json")
     samples = json.load(file)
     tokens = [sample["token"] for sample in samples]

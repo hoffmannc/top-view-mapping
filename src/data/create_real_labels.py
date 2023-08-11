@@ -147,6 +147,22 @@ def sample2label(sample):
 
 
 def main():
+    """
+    Creates the targets for the real-world dataset.
+
+    Store the data in the root.
+    Place annotation files in /data/real/drone/annotation_projects.
+    Run create_real_metadata.py, create_real_frames.py and create_real_samples.py before.
+
+    Args:
+        None
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
     projects = os.listdir("data/real/drone/annotation_projects")
     projects = [project for project in projects if project.split(".")[-1] == "json"]
 

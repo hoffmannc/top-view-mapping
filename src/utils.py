@@ -8,11 +8,36 @@ import random
 
 
 def decode_labels(labels, num_classes):
+    """
+    Decode targets from binary to decimal.
+
+    Args:
+        labels (torch.Tensor): Binary targets
+        num_classes (int): Number of classes in the decoded target
+
+    Returns:
+        labels (torch.Tensor): Decimal targets
+
+    Raises:
+        None
+    """
     bits = torch.pow(2, torch.arange(num_classes))
     return (labels & bits.view(-1, 1, 1)) > 0
 
 
 def reduce_labels(labels):
+    """
+    Reduces NuScenes classes to background/vehicle/person/object
+
+    Args:
+        labels (torch.Tensor): Target (14 x H x W)
+
+    Returns:
+        labels (torch.Tensor): Target (4 x H x W)
+
+    Raises:
+        None
+    """
     reduced = torch.zeros((4, labels.shape[1], labels.shape[2]))
     reduced[0, :, :] = labels[0:4, :, :].any(axis=0)  # Drivable area
     reduced[1, :, :] = labels[4:9, :, :].any(axis=0)  # Vehicle
@@ -22,12 +47,38 @@ def reduce_labels(labels):
 
 
 def upsample_labels(labels, size):
+    """
+    Upsample labels to desired size.
+
+    Args:
+        labels (torch.Tensor): Target (C x H x W)
+        size (tuple): (H_new, W_new)
+
+    Returns:
+        labels (torch.Tensor): Target (4 x H_nw x W_new)
+
+    Raises:
+        None
+    """
     labels = labels.unsqueeze(0)
     labels = F.interpolate(labels, size)
     return labels.squeeze(0)
 
 
 def show_sample(dataset, i):
+    """
+    Print s sample from a dataset
+
+    Args:
+        dataset (torch.utils.data.Dataset): Dataset to plot from
+        i (int): Index of sample to plot
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
     image, _, label, _, mask = dataset[i]
 
     _, ax = plt.subplots(2, 3, figsize=(10, 5))
@@ -59,21 +110,21 @@ def show_sample(dataset, i):
     plt.show()
 
 
-def dice_loss_mean(pred, label):
-    pred = torch.sigmoid(pred)
-    label = label.float()
-    intersection = 2 * pred * label
-    union = pred + label
-    iou = (intersection.float().sum(dim=0).sum(dim=-1).sum(dim=-1)) / (
-        union.float().sum(dim=0).sum(dim=-1).sum(dim=-1) + 1e-5
-    )
-
-    loss_mean = 1 - iou.mean()
-
-    return loss_mean
-
-
 def label2image(label: torch.Tensor):
+    """
+    Convert a target into a colored image.
+
+    Class colors are chosen randomly.
+
+    Args:
+        label (troch.Tensor): Label to plot
+
+    Returns:
+        Image (torch.Tensor)
+
+    Raises:
+        None
+    """
     image = torch.zeros((label.shape[1], label.shape[2], 3))
     colors = [
         "AliceBlue",
@@ -232,7 +283,22 @@ def label2image(label: torch.Tensor):
 
 def make_grid(grid_size, grid_res):
     """
-    https://github.com/avishkarsaha/translating-images-into-maps
+    Create recitilinear grid.
+
+    From: https://github.com/avishkarsaha/translating-images-into-maps
+
+    Args:
+        grid_size (tuple): Size of grid
+        grid_res (int): Resolution of grid
+
+    Returns:
+        grid (torch.Tensor)
+
+    Raises:
+        None
+    """
+    """
+    
     """
     depth, width = grid_size
     xcoords = torch.arange(0.0, width, grid_res)
@@ -243,6 +309,13 @@ def make_grid(grid_size, grid_res):
 
 
 class MetricDict(defaultdict):
+    """
+    Dict to store training metrics.
+
+    From: https://github.com/avishkarsaha/translating-images-into-maps
+
+    """
+
     def __init__(self):
         super().__init__(float)
         self.count = defaultdict(int)

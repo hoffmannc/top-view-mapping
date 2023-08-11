@@ -9,6 +9,27 @@ from ctypes import c_bool
 
 
 def main(cam, name, write: Synchronized, stop: Synchronized):
+    """
+    Script to capture plugged in USB webcams (Logitech C920e).
+
+    Ensure that the USB Bandwith is sufficient.
+
+    Specify the camera to capture by the index.
+    Which index refers to which camera depends on the local machine.
+
+    Args:
+        cam (int): Camera ID
+        name (str): Camera name
+        write (c_bool): Flag for capturing start
+        stop (c_bool): Flag for capturing stop
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
+
     path_name = f"data/real/{name}"
     if not os.path.exists(path_name):
         os.mkdir(path_name)

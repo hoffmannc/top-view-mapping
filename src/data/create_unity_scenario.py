@@ -5,6 +5,20 @@ import numpy as np
 
 
 def main(id):
+    """
+    Creates scenario for the unity dataset creation
+
+    Store the data in the root.
+
+    Args:
+        None
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
     file = open("data/unity/elements.json")
     elements = json.load(file)
 

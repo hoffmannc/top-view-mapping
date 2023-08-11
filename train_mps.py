@@ -67,6 +67,17 @@ def validate(model, dataloader, criterion, metrics, device):
 
 
 def main():
+    """
+    PyTorch training script Apple MetalPerformanceShaders.
+
+    Args:
+        None
+    Returns:
+        None
+    Raises:
+        None
+    """
+
     # Configuration
     with open("conf/config.yaml") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)

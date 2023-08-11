@@ -18,6 +18,24 @@ import src.model.network as networks
 
 
 def main(config):
+    """
+    PyTorch training script for multi-node CUDA training.
+
+    Submit batch job in the LSF10 cluster queue (gpuv100) using /jobs/jobscript.sh.
+
+    Model checkpoints are saved in /checkpoints.
+    Training logs are saved in /logs.
+
+    Args:
+        config (yaml): Configuration file for the training
+
+    Returns:
+        None
+
+    Raises:
+        None
+    """
+
     # DDP
     init_process_group()
     global_rank = int(os.environ["RANK"])
